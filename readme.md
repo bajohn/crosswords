@@ -11,7 +11,7 @@
 - p + q = m * c, where p = prize pool, q = amount paid to developers/crossword maker
 - First l entries that enter the correct hash can claim p/l credits. This means players can "wager" multiple entries that they'll win.
     - On first run, l = m/2 might be nice - half of entries win
-    
+
 
 ## Guides
 
@@ -22,3 +22,7 @@ https://blog.chain.link/how-to-build-and-deploy-a-solana-smart-contract/
 More advanced, escrow example (will be useful)
 https://paulx.dev/blog/2021/01/14/programming-on-solana-an-introduction/
 
+
+## TODO
+
+Mess around with example-helloworld solana repo, see about getting building blocks working.
