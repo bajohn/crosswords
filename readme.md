@@ -23,6 +23,23 @@ More advanced, escrow example (will be useful)
 https://paulx.dev/blog/2021/01/14/programming-on-solana-an-introduction/
 
 
+## Notes 
+
+Build via:
+```
+cargo build-bpf --manifest-path=./cw-contract/Cargo.toml --bpf-out-dir=dist/program
+```
+
+Start local testnet via
+```
+solana-test-validator
+```
+Then deploy via
+```
+solana program deploy /Users/bjohn/Repos/crosswords/dist/program/cwcontract.so
+```
+
 ## TODO
 
 Mess around with example-helloworld solana repo, see about getting building blocks working.
+
