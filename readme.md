@@ -25,6 +25,8 @@ https://paulx.dev/blog/2021/01/14/programming-on-solana-an-introduction/
 
 ## Notes 
 
+From root dir:
+
 Build via:
 ```
 cargo build-bpf --manifest-path=./cw-contract/Cargo.toml --bpf-out-dir=dist/program
@@ -38,7 +40,11 @@ Then deploy via
 ```
 solana program deploy /Users/bjohn/Repos/crosswords/dist/program/cwcontract.so
 ```
-
+Then run local client via
+```
+cd cw-client
+npm run dev
+```
 ## TODO
 
 Mess around with example-helloworld solana repo, see about getting building blocks working.
