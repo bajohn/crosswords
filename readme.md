@@ -38,7 +38,7 @@ solana-test-validator
 ```
 Then deploy via
 ```
-solana program deploy /Users/bjohn/Repos/crosswords/dist/program/cwcontract.so
+solana program deploy ./program/cwcontract.so
 ```
 Then run local client via
 ```
