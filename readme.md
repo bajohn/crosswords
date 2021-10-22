@@ -47,5 +47,7 @@ npm run dev
 ```
 ## TODO
 
-Mess around with example-helloworld solana repo, see about getting building blocks working.
+- Mess around with example-helloworld solana repo, see about getting building blocks working.
+
+- Next up: The hello world example seems to be working! We just gotta give the payer account some credits!
 
