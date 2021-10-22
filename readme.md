@@ -45,9 +45,15 @@ Then run local client via
 cd cw-client
 npm run dev
 ```
+
+Fund a wallet using 
+```
+solana transfer {wallet public key} 1 --allow-unfunded-recipient
+```
 ## TODO
 
 - Mess around with example-helloworld solana repo, see about getting building blocks working.
 
 - Next up: The hello world example seems to be working! We just gotta give the payer account some credits!
 
+solana transfer Gh3EmjisqQZLEyW6fjW1VWg82b3jmomwqr2G7285m1US 1 --allow-unfunded-recipient
