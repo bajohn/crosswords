@@ -38,7 +38,7 @@ solana-test-validator
 ```
 Then deploy via
 ```
-solana program deploy ./program/cwcontract.so
+solana program deploy ./dist/program/cwcontract.so
 ```
 Then run local client via
 ```
@@ -52,8 +52,16 @@ solana transfer {wallet public key} 1 --allow-unfunded-recipient
 ```
 ## TODO
 
-- Mess around with example-helloworld solana repo, see about getting building blocks working.
-
-- Next up: The hello world example seems to be working! We just gotta give the payer account some credits!
-
-solana transfer Gh3EmjisqQZLEyW6fjW1VWg82b3jmomwqr2G7285m1US 1 --allow-unfunded-recipient
+- Try buildng an escrow service.
+    1. One account only
+        - Send funds to contract 
+        - Run an instruction to have the funds returned
+    2. One account w/ phrase
+        - Send funds to contract
+        - Run an instruction that returns funds iff a correct phrase is sent
+    3. Two accounts w/ phrase
+        - Have two accounts send funds to a contract
+        - Whoever sends the phrase first gets all the funds
+    4. Two accounts w/ hash phrase
+        - Same as (3), but hash the phrase sent, to obfuscate what phrase unlocks the funds
+    LATER: Refunding before funded, proportion of winners, multiple winners, etc
