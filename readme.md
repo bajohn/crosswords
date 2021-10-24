@@ -49,6 +49,7 @@ npm run dev
 Fund a wallet using 
 ```
 solana transfer {wallet public key} 1 --allow-unfunded-recipient
+solana transfer Gh3EmjisqQZLEyW6fjW1VWg82b3jmomwqr2G7285m1US 1 --allow-unfunded-recipient
 ```
 ## TODO
 

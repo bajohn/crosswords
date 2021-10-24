@@ -30,7 +30,7 @@ const main = async () => {
         connection,
         playerKeyPair,
         programKeypair.publicKey);
-    // await fundEscrowAccount(connection, playerKeyPair, escrowAccount);
+    await fundEscrowAccount(connection, playerKeyPair, escrowAccount);
     await logAccInfo(connection, escrowAccount)
     await logAccInfo(connection, playerKeyPair.publicKey);
     await transferFunds(connection, programKeypair.publicKey, escrowAccount, playerKeyPair);
