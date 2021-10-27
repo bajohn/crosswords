@@ -30,15 +30,15 @@ const main = async () => {
         connection,
         playerKeyPair,
         programKeypair.publicKey);
-    await fundEscrowAccount(connection, playerKeyPair, escrowAccount);
+    // await fundEscrowAccount(connection, playerKeyPair, escrowAccount);
     await logAccInfo(connection, escrowAccount)
     await logAccInfo(connection, playerKeyPair.publicKey);
-    await transferFunds(connection, programKeypair.publicKey, escrowAccount, playerKeyPair);
+    await payFromEscrow(connection, programKeypair.publicKey, escrowAccount, playerKeyPair);
     await logAccInfo(connection, escrowAccount)
     await logAccInfo(connection, playerKeyPair.publicKey);
 }
 
-const logAccInfo = async (connection: Connection, account: PublicKey)=>{
+const logAccInfo = async (connection: Connection, account: PublicKey) => {
     const info = await connection.getAccountInfo(account);
     console.log(info);
 }
@@ -60,17 +60,15 @@ const fundEscrowAccount = async (connection: Connection, payerKeypair: Keypair, 
 
 
 const createAccountOwnedByProgram = async (connection: Connection, payer: Keypair, programId: PublicKey) => {
-    const GREETING_SEED = 'escrowseed';
+    const FIXED_ACC_SEED = 'escrowseed';
     const escrowPubkey = await PublicKey.createWithSeed(
         payer.publicKey,
-        GREETING_SEED,
+        FIXED_ACC_SEED,
         programId,
     );
 
-    const GREETING_SIZE = borsh.serialize(
-        GreetingSchema,
-        new GreetingAccount(),
-    ).length;
+    // Minimum size per Solana docs https://docs.solana.com/developing/programming-model/accounts
+    const MIN_ACC_BYTES = 128;
     // Check if the greeting account has already been created
     const escrowAccount = await connection.getAccountInfo(escrowPubkey);
     if (escrowAccount === null) {
@@ -78,16 +76,16 @@ const createAccountOwnedByProgram = async (connection: Connection, payer: Keypai
             'Creating account', escrowPubkey.toBase58(),
         );
         const lamports = await connection.getMinimumBalanceForRentExemption(
-            GREETING_SIZE,
+            MIN_ACC_BYTES,
         );
         const transaction = new Transaction().add(
             SystemProgram.createAccountWithSeed({
                 fromPubkey: payer.publicKey,
                 basePubkey: payer.publicKey,
-                seed: GREETING_SEED,
+                seed: FIXED_ACC_SEED,
                 newAccountPubkey: escrowPubkey,
                 lamports,
-                space: GREETING_SIZE,
+                space: MIN_ACC_BYTES,
                 programId,
             }),
         );
@@ -120,16 +118,19 @@ const getProgramKeypair = async (connection: Connection, programPath: string) =>
     return programKeyPair;
 }
 
-class GreetingAccount {
-    counter = 0;
-    constructor(fields: { counter: number } | undefined = undefined) {
+// TODO - get this schema sorted to serialize the a password message to the on-chain program
+class PasswordStore {
+    password: string;
+    constructor(fields: { password: string } | undefined = undefined) {
         if (fields) {
-            this.counter = fields.counter;
+            this.password = fields.password;
+        } else {
+            throw Error('')
         }
     }
 }
-const GreetingSchema = new Map([
-    [GreetingAccount, { kind: 'struct', fields: [['counter', 'u32']] }],
+const PasswordSchema = new Map([
+    [PasswordStore, { kind: 'struct', fields: [['password', 'string']] }],
 ]);
 
 
@@ -150,20 +151,25 @@ const establishConnection = async () => {
 }
 
 
-const transferFunds = async (
+const payFromEscrow = async (
     connection: Connection,
     programId: PublicKey,
     escrowAccount: PublicKey,
     receiverKeypair: Keypair
 ) => {
 
+    const serialized = borsh.serialize(PasswordSchema, new PasswordStore({ password: 'test' }));
+    const buff: Buffer = Buffer.alloc(serialized.length);
+    for (let i = 0; i < serialized.length; i++) {
+        buff[i] = serialized[i];
+    }
     const instruction = new TransactionInstruction({
         keys: [
             { pubkey: escrowAccount, isSigner: false, isWritable: true },
             { pubkey: receiverKeypair.publicKey, isSigner: false, isWritable: true }
         ],
         programId,
-        data: Buffer.alloc(0),
+        data: buff,
     });
     await sendAndConfirmTransaction(
         connection,
@@ -174,23 +180,23 @@ const transferFunds = async (
 
 
 
-const reportGreetings = async (connection: Connection, greetedKey: PublicKey) => {
-    const accountInfo = await connection.getAccountInfo(greetedKey);
-    if (accountInfo === null) {
-        throw 'Error: cannot find the greeted account';
-    }
-    const greeting = borsh.deserialize(
-        GreetingSchema,
-        GreetingAccount,
-        accountInfo.data,
-    );
-    console.log(
-        greetedKey.toBase58(),
-        'has been greeted',
-        greeting.counter,
-        'time(s)',
-    );
-}
+// const reportGreetings = async (connection: Connection, greetedKey: PublicKey) => {
+//     const accountInfo = await connection.getAccountInfo(greetedKey);
+//     if (accountInfo === null) {
+//         throw 'Error: cannot find the greeted account';
+//     }
+//     const greeting = borsh.deserialize(
+//         GreetingSchema,
+//         GreetingAccount,
+//         accountInfo.data,
+//     );
+//     console.log(
+//         greetedKey.toBase58(),
+//         'has been greeted',
+//         greeting.counter,
+//         'time(s)',
+//     );
+// }
 
 
 main();

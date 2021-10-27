@@ -59,6 +59,8 @@ solana transfer Gh3EmjisqQZLEyW6fjW1VWg82b3jmomwqr2G7285m1US 1 --allow-unfunded-
         - Run an instruction to have the funds returned
     2. One account w/ phrase
         - Send funds to contract
+        -->TODO: We are here! The instruction is sent, need to now
+         deserialize the instruction in-contract and check for validity
         - Run an instruction that returns funds iff a correct phrase is sent
     3. Two accounts w/ phrase
         - Have two accounts send funds to a contract
