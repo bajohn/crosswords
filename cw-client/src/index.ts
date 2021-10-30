@@ -13,11 +13,16 @@ import {
     TransferParams,
 } from '@solana/web3.js';
 import * as borsh from 'borsh';
-
+import * as crypto from 'crypto';
 
 
 
 const main = async () => {
+    const password = 'a password'
+    const hashed = crypto.createHash('sha256').update(password);
+
+    console.log('TS HASH', hashed.digest('hex'))
+
     const programPath = '../dist/program/cwcontract-keypair.json';
     const userPath = 'userkeypair.json';
     // await createUserKey(userPath); // create and store private key for the user
@@ -33,7 +38,7 @@ const main = async () => {
     // await fundEscrowAccount(connection, playerKeyPair, escrowAccount);
     await logAccInfo(connection, escrowAccount)
     await logAccInfo(connection, playerKeyPair.publicKey);
-    await payFromEscrow(connection, programKeypair.publicKey, escrowAccount, playerKeyPair);
+    await payFromEscrow(connection, programKeypair.publicKey, escrowAccount, playerKeyPair, password);
     await logAccInfo(connection, escrowAccount)
     await logAccInfo(connection, playerKeyPair.publicKey);
 }
@@ -155,10 +160,11 @@ const payFromEscrow = async (
     connection: Connection,
     programId: PublicKey,
     escrowAccount: PublicKey,
-    receiverKeypair: Keypair
+    receiverKeypair: Keypair,
+    password: string
 ) => {
 
-    const serialized = borsh.serialize(PasswordSchema, new PasswordStore({ password: 'test' }));
+    const serialized = borsh.serialize(PasswordSchema, new PasswordStore({ password }));
     const buff: Buffer = Buffer.alloc(serialized.length);
     for (let i = 0; i < serialized.length; i++) {
         buff[i] = serialized[i];

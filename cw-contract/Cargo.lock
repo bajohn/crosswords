@@ -545,6 +545,7 @@ version = "0.1.0"
 dependencies = [
  "borsh",
  "borsh-derive",
+ "sha2",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
