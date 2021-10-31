@@ -27,14 +27,14 @@ pub fn process_instruction(
     sol_log("Escrow program entry");
 
     // Increment and store the number of times the account has been greeted
-    let greeting_account = PasswordStore::try_from_slice(&instruction_data)?;
-    msg!("Input data is {}.", greeting_account.password);
+    let password_store = PasswordStore::try_from_slice(&instruction_data)?;
+    msg!("Input data is {}.", password_store.password);
 
 
     let mut hasher = Sha256::new();
 
     // write input message
-    hasher.update(greeting_account.password);
+    hasher.update(password_store.password);
     
     // read hash digest and consume hasher
     let result = hasher.finalize();
