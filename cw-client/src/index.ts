@@ -35,6 +35,15 @@ const main = async () => {
         connection,
         playerKeyPair,
         programKeypair.publicKey);
+
+
+    // TODO
+    // - initialize contract with sha-hashed correct password
+    // - fund contract from two accounts
+    // - make sure the two sender accounts are stored in-contract
+    // - One of the senders then sends a claim attempt to the contract. Contract hashes the attempt
+    //      and compares to the hash. Also makes sure the sender account is one of the original funders.
+
     // await fundEscrowAccount(connection, playerKeyPair, escrowAccount);
     await logAccInfo(connection, escrowAccount)
     await logAccInfo(connection, playerKeyPair.publicKey);
