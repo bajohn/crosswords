@@ -22,7 +22,7 @@ const main = async () => {
     const hashed = crypto.createHash('sha256').update(password);
 
     console.log('TS HASH', hashed.digest('hex'))
-
+    
     const programPath = '../dist/program/cwcontract-keypair.json';
     const userPath = 'userkeypair.json';
     // await createUserKey(userPath); // create and store private key for the user

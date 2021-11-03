@@ -71,7 +71,7 @@ solana transfer Gh3EmjisqQZLEyW6fjW1VWg82b3jmomwqr2G7285m1US 1 --allow-unfunded-
         - Run an instruction that returns funds iff a correct phrase is sent
     3. Two accounts w/ phrase
         -->TODO: We are here! We have instruction data and hashing working. 
-        --> Also TODO
+        
         - Have two accounts send funds to a contract
         - Whoever sends the phrase first gets all the funds
     4. Two accounts w/ hash phrase

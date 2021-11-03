@@ -1,16 +1,16 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+use sha2::{Digest, Sha256};
+use hex_literal::hex;
+
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint,
     entrypoint::ProgramResult,
+    log::sol_log,
     msg,
     program_error::ProgramError,
     pubkey::Pubkey,
-    log::sol_log
-
 };
-use sha2::{Sha256, Digest};
-
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct PasswordStore {
@@ -19,7 +19,7 @@ pub struct PasswordStore {
 
 entrypoint!(process_instruction);
 pub fn process_instruction(
-    program_id: &Pubkey, 
+    program_id: &Pubkey,
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
@@ -28,22 +28,27 @@ pub fn process_instruction(
 
     // Increment and store the number of times the account has been greeted
     let password_store = PasswordStore::try_from_slice(&instruction_data)?;
-    msg!("Input data is {}.", password_store.password);
 
+    // As a test, based on a hash for "a password"
+    let correct_hash = hex!("afd1368cbf1509870eecbbce3c3bc4614e5d10e9f03aa6590db688d4cffbe86b");
+    msg!("Input data is {}.", password_store.password);
 
     let mut hasher = Sha256::new();
 
     // write input message
     hasher.update(password_store.password);
-    
     // read hash digest and consume hasher
     let result = hasher.finalize();
-    msg!("Result: {:x}", result);
+
+    if result[..] == correct_hash {
+        msg!("correct password!");
+    } else {
+        msg!("incorrect password!");
+    }
+
 
     panic!("Exiting");
-    
     const LAMPORTS_PER_SOL: u64 = 1_000_000_000;
-    
     let accounts_iter = &mut accounts.iter();
 
     let source_account = next_account_info(accounts_iter)?;
@@ -59,7 +64,6 @@ pub fn process_instruction(
     **source_account.try_borrow_mut_lamports()? -= LAMPORTS_PER_SOL;
     // Deposit five lamports into the destination
     **destination_account.try_borrow_mut_lamports()? += LAMPORTS_PER_SOL;
-
 
     Ok(())
 }
