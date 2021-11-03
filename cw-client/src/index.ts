@@ -18,23 +18,36 @@ import * as crypto from 'crypto';
 
 
 const main = async () => {
-    const password = 'a password'
-    const hashed = crypto.createHash('sha256').update(password);
 
-    console.log('TS HASH', hashed.digest('hex'))
-    
     const programPath = '../dist/program/cwcontract-keypair.json';
-    const userPath = 'userkeypair.json';
-    // await createUserKey(userPath); // create and store private key for the user
+    const userPath1 = 'userkeypair1.json';
+    const userPath2 = 'userkeypair2.json';
+    const dealerPath = 'dealerkeypair.json';
 
-    const playerKeyPair = await getPayer(userPath);
-    console.log('Player key', playerKeyPair.publicKey.toString());
+    // Run once to create accounts, then fund 
+    // with solana transfer {pubkey} {solamount} --allow-unfunded-recipient
+    // await createUserKeys([userPath1, userPath2, dealerPath]);
+
+    // Current keys:
+    // New key stored at userkeypair1.json, public key 59kWuFvVnjZiQQ2NHyxpedLnZZ5ENW1QJ2u2neshUW7z
+    // New key stored at userkeypair2.json, public key A42p9XXPPV2C7mpdfH21Zi9G2VU9US4W2y14huQfXy12
+    // New key stored at dealerkeypair.json, public key H9ewgnBZPgPTciT6mrZzKhzRPwijXNxsypjw53jkpUj8
+
+
+    const dealerKeyPair = await getWalletKeyPair(dealerPath); // Dealer pays to set up escrow
+    const player1KeyPair = await getWalletKeyPair(userPath1);
+    const player2KeyPair = await getWalletKeyPair(userPath2);
+    const allKeypairs = [dealerKeyPair, player1KeyPair, player2KeyPair];
+
     const connection = await establishConnection();
     const programKeypair = await getProgramKeypair(connection, programPath);
     const escrowAccount = await createAccountOwnedByProgram(
         connection,
-        playerKeyPair,
+        dealerKeyPair,
         programKeypair.publicKey);
+
+    console.log('BEFORE');
+    await logAccsInfo(connection, allKeypairs)
 
 
     // TODO
@@ -44,17 +57,33 @@ const main = async () => {
     // - One of the senders then sends a claim attempt to the contract. Contract hashes the attempt
     //      and compares to the hash. Also makes sure the sender account is one of the original funders.
 
-    // await fundEscrowAccount(connection, playerKeyPair, escrowAccount);
-    await logAccInfo(connection, escrowAccount)
-    await logAccInfo(connection, playerKeyPair.publicKey);
-    await payFromEscrow(connection, programKeypair.publicKey, escrowAccount, playerKeyPair, password);
-    await logAccInfo(connection, escrowAccount)
-    await logAccInfo(connection, playerKeyPair.publicKey);
+
+
+    await fundEscrowAccount(connection, player1KeyPair, escrowAccount);
+    await fundEscrowAccount(connection, player2KeyPair, escrowAccount);
+
+    const correctPassword = logPasswordHash('a password');
+    const incorrectPassword = logPasswordHash('nope nope');
+
+    await payFromEscrow(connection, programKeypair.publicKey, escrowAccount, player1KeyPair, correctPassword);
+    await payFromEscrow(connection, programKeypair.publicKey, escrowAccount, player2KeyPair, incorrectPassword);
+    console.log('AFTER');
+    await logAccsInfo(connection, allKeypairs)
 }
 
-const logAccInfo = async (connection: Connection, account: PublicKey) => {
-    const info = await connection.getAccountInfo(account);
-    console.log(info);
+const logPasswordHash = (password: string) => {
+    const hashed = crypto.createHash('sha256').update(password);
+    console.log('TS HASH', hashed.digest('hex'));
+    return password;
+}
+
+const logAccsInfo = async (connection: Connection, keyPairs: Keypair[]) => {
+    Promise.all(keyPairs.map(keypair => logAccInfo(connection, keypair)));
+}
+
+const logAccInfo = async (connection: Connection, keyPair: Keypair) => {
+    const info = await connection.getAccountInfo(keyPair.publicKey);
+    console.log('Account:', keyPair.publicKey.toBase58(), info.lamports);
 }
 
 const fundEscrowAccount = async (connection: Connection, payerKeypair: Keypair, receiverPubkey: PublicKey) => {
@@ -111,9 +140,12 @@ const createAccountOwnedByProgram = async (connection: Connection, payer: Keypai
     }
     return escrowPubkey;
 }
-
+const createUserKeys = async (paths: string[]) => {
+    return await Promise.all(paths.map(path => createUserKey(path)));
+}
 const createUserKey = async (filePath: string): Promise<string> => {
     const newPair = Keypair.generate();
+    console.log(`New key stored at ${filePath}, public key ${newPair.publicKey}`);
     fs.writeFile(filePath, `[${newPair.secretKey.toString()}]`, { encoding: 'utf8' });
     return filePath;
 }
@@ -148,7 +180,7 @@ const PasswordSchema = new Map([
 ]);
 
 
-const getPayer = async (userPath: string): Promise<Keypair> => {
+const getWalletKeyPair = async (userPath: string): Promise<Keypair> => {
     const secretKeyString = await fs.readFile(userPath, { encoding: 'utf8' });
     const secretKey = Uint8Array.from(JSON.parse(secretKeyString));
     const keyPair = Keypair.fromSecretKey(secretKey);
