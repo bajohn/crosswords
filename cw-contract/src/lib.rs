@@ -42,7 +42,7 @@ pub fn process_instruction(
 
     if result[..] == correct_hash {
         msg!("Correct password! Paying reward");
-        
+
         const LAMPORTS_PER_SOL: u64 = 1_000_000_000;
         let transfer_ammount = 2 * LAMPORTS_PER_SOL; 
         let accounts_iter = &mut accounts.iter();
@@ -56,9 +56,8 @@ pub fn process_instruction(
             return Err(ProgramError::IncorrectProgramId);
         }
     
-        // Withdraw five lamports from the source
+
         **source_account.try_borrow_mut_lamports()? -= transfer_ammount;
-        // Deposit five lamports into the destination
         **destination_account.try_borrow_mut_lamports()? += transfer_ammount;
     
     } else {
