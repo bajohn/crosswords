@@ -70,10 +70,25 @@ solana transfer Gh3EmjisqQZLEyW6fjW1VWg82b3jmomwqr2G7285m1US 1 --allow-unfunded-
          deserialize the instruction in-contract and check for validity
         - Run an instruction that returns funds iff a correct phrase is sent
     3. Two accounts w/ phrase
-        -->TODO: We are here! We have instruction data and hashing working. 
-        
         - Have two accounts send funds to a contract
         - Whoever sends the phrase first gets all the funds
     4. Two accounts w/ hash phrase
         - Same as (3), but hash the phrase sent, to obfuscate what phrase unlocks the funds
-    LATER: Refunding before funded, proportion of winners, multiple winners, etc
+    --> TODO WE ARE HERE!
+    PROBLEM - the instructions are stored on-chain. How can we obfuscate?
+    - Maybe the claimer create an account that stores the solution hash, then the program checks that?
+    - Like n users has the right to create 1 each of "landing place" accounts. Once funded they can insert 
+    the correct hash to it using program instructions? But this would still be on-chain
+    5. n accounts with accounts tracking
+        - Same as (4), but allow arbitrary number of accounts, and check the claimer is an original funder
+        - Payout is based on length of account array
+
+    6. Game started state
+        - Only allow funding before game start, only allow claims after game start
+    
+    7. Proportional payout
+        - Payment for first x winners? 
+            - Easy to cheat by making multiple wallets 
+            - 
+
+
