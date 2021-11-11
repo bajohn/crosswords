@@ -52,7 +52,7 @@ npm run dev
 
 Log program output with 
 ```
-solana log
+solana logs
 ```
 
 

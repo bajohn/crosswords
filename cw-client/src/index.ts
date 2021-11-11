@@ -33,7 +33,7 @@ const main = async () => {
     // New key stored at userkeypair2.json, public key A42p9XXPPV2C7mpdfH21Zi9G2VU9US4W2y14huQfXy12
     // New key stored at dealerkeypair.json, public key H9ewgnBZPgPTciT6mrZzKhzRPwijXNxsypjw53jkpUj8
 
-
+    console.log('Start');
     const dealerKeyPair = await getWalletKeyPair(dealerPath); // Dealer pays to set up escrow
     const player1KeyPair = await getWalletKeyPair(userPath1);
     const player2KeyPair = await getWalletKeyPair(userPath2);
@@ -41,6 +41,15 @@ const main = async () => {
 
     const connection = await establishConnection();
     const programKeypair = await getProgramKeypair(connection, programPath);
+    const hashMapAccount = await createHashmapAccountOwnedByProgram(
+        connection,
+        dealerKeyPair,
+        programKeypair.publicKey);
+    return 'done'
+    await runContract(connection, programKeypair.publicKey, hashMapAccount, player1KeyPair);
+    console.log('Done');
+    return 'done';
+
     const escrowAccount = await createAccountOwnedByProgram(
         connection,
         dealerKeyPair,
@@ -135,7 +144,7 @@ const createAccountOwnedByProgram = async (connection: Connection, payer: Keypai
 
 const createHashmapAccountOwnedByProgram = async (connection: Connection, payer: Keypair, programId: PublicKey) => {
     const FIXED_ACC_SEED = 'hashmapseed';
-    const escrowPubkey = await PublicKey.createWithSeed(
+    const hashmapPubkey = await PublicKey.createWithSeed(
         payer.publicKey,
         FIXED_ACC_SEED,
         programId,
@@ -144,24 +153,23 @@ const createHashmapAccountOwnedByProgram = async (connection: Connection, payer:
     // Minimum size per Solana docs https://docs.solana.com/developing/programming-model/accounts
     const SALT_STORE_BYTES = borsh.serialize(
         SaltStoreSchema,
-        new SaltStore(),
+        new SaltStore({ saltstore: [] }),
     ).length;
 
-    // Check if the greeting account has already been created
-    const escrowAccount = await connection.getAccountInfo(escrowPubkey);
+    const escrowAccount = await connection.getAccountInfo(hashmapPubkey);
     if (escrowAccount === null) {
         console.log(
-            'Creating account', escrowPubkey.toBase58(),
+            'Creating account', hashmapPubkey.toBase58(),
         );
         const lamports = await connection.getMinimumBalanceForRentExemption(
             SALT_STORE_BYTES,
         );
         const transaction = new Transaction().add(
             SystemProgram.createAccountWithSeed({
-                fromPubkey: escrowPubkey,
-                basePubkey: escrowPubkey,
+                fromPubkey: payer.publicKey,
+                basePubkey: hashmapPubkey,
                 seed: FIXED_ACC_SEED,
-                newAccountPubkey: escrowPubkey,
+                newAccountPubkey: hashmapPubkey,
                 lamports,
                 space: SALT_STORE_BYTES,
                 programId,
@@ -170,10 +178,10 @@ const createHashmapAccountOwnedByProgram = async (connection: Connection, payer:
         await sendAndConfirmTransaction(connection, transaction, [payer]);
     } else {
         console.log(
-            'Account exists', escrowPubkey.toBase58(),
+            'Account exists', hashmapPubkey.toBase58(),
         );
     }
-    return escrowPubkey;
+    return hashmapPubkey;
 }
 
 
@@ -222,8 +230,8 @@ const PasswordSchema = new Map([
 // Schema for storing a hashmap of
 // accounts and salts
 class SaltStore {
-    saltstore: {};
-    constructor(fields: { saltstore: { [key: string]: string } } | undefined = undefined) {
+    saltstore: any[] = [];
+    constructor(fields: { saltstore: [] } | undefined = undefined) {
         if (fields) {
             this.saltstore = fields.saltstore;
         } else {
@@ -232,7 +240,7 @@ class SaltStore {
     }
 }
 const SaltStoreSchema = new Map([
-    [SaltStore, { kind: 'struct', fields: [['saltstore', 'HashMap']] }],
+    [SaltStore, { kind: 'struct', fields: [['saltstore', 'array']] }],
 ]);
 
 
@@ -253,6 +261,25 @@ const establishConnection = async () => {
     return connection;
 }
 
+const runContract = async (
+    connection: Connection,
+    programId: PublicKey,
+    hashmapAccount: PublicKey,
+    senderKeypair: Keypair
+) => {
+    const instruction = new TransactionInstruction({
+        keys: [
+            { pubkey: hashmapAccount, isSigner: false, isWritable: true },
+        ],
+        programId,
+        data: Buffer.alloc(0),
+    });
+    await sendAndConfirmTransaction(
+        connection,
+        new Transaction().add(instruction),
+        [senderKeypair],
+    );
+};
 
 const payFromEscrow = async (
     connection: Connection,
