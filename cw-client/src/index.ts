@@ -130,6 +130,54 @@ const createAccountOwnedByProgram = async (connection: Connection, payer: Keypai
     }
     return escrowPubkey;
 }
+
+
+
+const createHashmapAccountOwnedByProgram = async (connection: Connection, payer: Keypair, programId: PublicKey) => {
+    const FIXED_ACC_SEED = 'hashmapseed';
+    const escrowPubkey = await PublicKey.createWithSeed(
+        payer.publicKey,
+        FIXED_ACC_SEED,
+        programId,
+    );
+
+    // Minimum size per Solana docs https://docs.solana.com/developing/programming-model/accounts
+    const SALT_STORE_BYTES = borsh.serialize(
+        SaltStoreSchema,
+        new SaltStore(),
+    ).length;
+
+    // Check if the greeting account has already been created
+    const escrowAccount = await connection.getAccountInfo(escrowPubkey);
+    if (escrowAccount === null) {
+        console.log(
+            'Creating account', escrowPubkey.toBase58(),
+        );
+        const lamports = await connection.getMinimumBalanceForRentExemption(
+            SALT_STORE_BYTES,
+        );
+        const transaction = new Transaction().add(
+            SystemProgram.createAccountWithSeed({
+                fromPubkey: escrowPubkey,
+                basePubkey: escrowPubkey,
+                seed: FIXED_ACC_SEED,
+                newAccountPubkey: escrowPubkey,
+                lamports,
+                space: SALT_STORE_BYTES,
+                programId,
+            }),
+        );
+        await sendAndConfirmTransaction(connection, transaction, [payer]);
+    } else {
+        console.log(
+            'Account exists', escrowPubkey.toBase58(),
+        );
+    }
+    return escrowPubkey;
+}
+
+
+
 const createUserKeys = async (paths: string[]) => {
     return await Promise.all(paths.map(path => createUserKey(path)));
 }
@@ -154,7 +202,8 @@ const getProgramKeypair = async (connection: Connection, programPath: string) =>
     return programKeyPair;
 }
 
-// TODO - get this schema sorted to serialize the a password message to the on-chain program
+// Schema for passing a password into
+// the contract as serialized instruction_data
 class PasswordStore {
     password: string;
     constructor(fields: { password: string } | undefined = undefined) {
@@ -168,6 +217,24 @@ class PasswordStore {
 const PasswordSchema = new Map([
     [PasswordStore, { kind: 'struct', fields: [['password', 'string']] }],
 ]);
+
+
+// Schema for storing a hashmap of
+// accounts and salts
+class SaltStore {
+    saltstore: {};
+    constructor(fields: { saltstore: { [key: string]: string } } | undefined = undefined) {
+        if (fields) {
+            this.saltstore = fields.saltstore;
+        } else {
+            throw Error('')
+        }
+    }
+}
+const SaltStoreSchema = new Map([
+    [SaltStore, { kind: 'struct', fields: [['saltstore', 'HashMap']] }],
+]);
+
 
 
 const getWalletKeyPair = async (userPath: string): Promise<Keypair> => {
@@ -203,7 +270,8 @@ const payFromEscrow = async (
     const instruction = new TransactionInstruction({
         keys: [
             { pubkey: escrowAccount, isSigner: false, isWritable: true },
-            { pubkey: receiverKeypair.publicKey, isSigner: false, isWritable: true }
+            //flipped to isSigner to true -> might break things:
+            { pubkey: receiverKeypair.publicKey, isSigner: true, isWritable: true }
         ],
         programId,
         data: buff,

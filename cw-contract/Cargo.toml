@@ -15,6 +15,7 @@ borsh-derive = "0.9.1"
 solana-program = "=1.7.9"
 sha2 = "0.9.8"
 hex-literal = "0.3.3"
+rand = "0.8.4"
 
 [dev-dependencies]
 solana-program-test = "=1.7.9"

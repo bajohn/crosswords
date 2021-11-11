@@ -27,16 +27,18 @@ https://paulx.dev/blog/2021/01/14/programming-on-solana-an-introduction/
 
 From root dir:
 
-Build via:
-```
-cargo build-bpf --manifest-path=./cw-contract/Cargo.toml --bpf-out-dir=dist/program
-```
-
 Start local testnet via
 ```
 solana-test-validator
 ```
-Then deploy via
+
+Build contract via:
+```
+cargo build-bpf --manifest-path=./cw-contract/Cargo.toml --bpf-out-dir=dist/program
+```
+
+
+Then deploy contract via
 ```
 solana program deploy ./dist/program/cwcontract.so
 ```
@@ -76,9 +78,12 @@ solana transfer Gh3EmjisqQZLEyW6fjW1VWg82b3jmomwqr2G7285m1US 1 --allow-unfunded-
         - Same as (3), but hash the phrase sent, to obfuscate what phrase unlocks the funds
     --> TODO WE ARE HERE!
     PROBLEM - the instructions are stored on-chain. How can we obfuscate?
-    - Maybe the claimer create an account that stores the solution hash, then the program checks that?
-    - Like n users has the right to create 1 each of "landing place" accounts. Once funded they can insert 
-    the correct hash to it using program instructions? But this would still be on-chain
+    SOLUTION?? 
+        - Store a random salt value for each player account in a hashmap account owned by the contract
+            {account: salt}
+        - When puzzle is ready, some external process populates another hashmap account with 
+            {account: hash(hash(salt + puzzle solution))}
+        - Players then send hash(salt + (puzzle solution)), and contract calculates  hash(hash(salt + puzzle solution)
     5. n accounts with accounts tracking
         - Same as (4), but allow arbitrary number of accounts, and check the claimer is an original funder
         - Payout is based on length of account array
