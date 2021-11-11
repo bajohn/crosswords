@@ -1,8 +1,8 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use sha2::{Digest, Sha256};
 use hex_literal::hex;
-// use std::collections::BTreeMap;
-use rand::Rng;
+use std::collections::HashMap;
+// use rand::Rng;
 
 
 
@@ -21,10 +21,10 @@ pub struct PasswordStore {
     pub password: String,
 }
 
-// #[derive(BorshSerialize, BorshDeserialize, Debug)]
-// pub struct SaltStore {
-//     pub saltstore: BTreeMap<String, String>,
-// }
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+pub struct SaltStore {
+    pub saltstore: HashMap<String, String>,
+}
 
 entrypoint!(process_instruction);
 pub fn process_instruction(
@@ -38,16 +38,16 @@ pub fn process_instruction(
 
     // Get salt account info from instructions
     // TODO: this should be hardcoded in-contract, not sent as an arg
-    // let accounts_iter = &mut accounts.iter();
-    // let salt_acc_info = next_account_info(accounts_iter)?;
-    // let salt_data = salt_acc_info.try_borrow_mut_data()?;
-    // let mut salt_hashmap = SaltStore::try_from_slice(&salt_data)?;
+    let accounts_iter = &mut accounts.iter();
+    let salt_acc_info = next_account_info(accounts_iter)?;
+    let salt_data = salt_acc_info.try_borrow_mut_data()?;
+    let mut salt_hashmap = SaltStore::try_from_slice(&salt_data)?;
 
-    // let contains_key = salt_hashmap.saltstore.contains_key(&String::from("acc_key"));
-    // msg!("Contains key {}", contains_key);
-    // salt_hashmap.saltstore.insert(String::from("acc_key"), String::from("salt"));
-    // let contains_key = salt_hashmap.saltstore.contains_key(&String::from("acc_key"));
-    // msg!("Contains key {}", contains_key);
+    let contains_key = salt_hashmap.saltstore.contains_key(&String::from("acc_key"));
+    msg!("Contains key {}", contains_key);
+    salt_hashmap.saltstore.insert(String::from("acc_key"), String::from("salt"));
+    let contains_key = salt_hashmap.saltstore.contains_key(&String::from("acc_key"));
+    msg!("Contains key {}", contains_key);
 
 
 
@@ -94,14 +94,14 @@ pub fn process_instruction(
     Ok(())
 }
 
-fn get_salt(len: u8) -> String {
-    let mut rng = rand::thread_rng();
-    let mut ret = String::from("");
-    for _ in 0..len {
-        let i: u8 = rng.gen_range(97..123);
-        let utf8_vec = vec![i];
-        let s = std::str::from_utf8(&utf8_vec).unwrap();
-        ret.push_str(s);
-    }
-    ret
-}
+// fn get_salt(len: u8) -> String {
+//     let mut rng = rand::thread_rng();
+//     let mut ret = String::from("");
+//     for _ in 0..len {
+//         let i: u8 = rng.gen_range(97..123);
+//         let utf8_vec = vec![i];
+//         let s = std::str::from_utf8(&utf8_vec).unwrap();
+//         ret.push_str(s);
+//     }
+//     ret
+// }

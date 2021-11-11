@@ -546,7 +546,6 @@ dependencies = [
  "borsh",
  "borsh-derive",
  "hex-literal",
- "rand 0.8.4",
  "sha2",
  "solana-program",
  "solana-program-test",
