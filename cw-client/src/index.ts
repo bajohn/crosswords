@@ -45,7 +45,6 @@ const main = async () => {
         connection,
         dealerKeyPair,
         programKeypair.publicKey);
-    return 'done'
     await runContract(connection, programKeypair.publicKey, hashMapAccount, player1KeyPair);
     console.log('Done');
     return 'done';
@@ -167,7 +166,7 @@ const createHashmapAccountOwnedByProgram = async (connection: Connection, payer:
         const transaction = new Transaction().add(
             SystemProgram.createAccountWithSeed({
                 fromPubkey: payer.publicKey,
-                basePubkey: hashmapPubkey,
+                basePubkey: payer.publicKey,
                 seed: FIXED_ACC_SEED,
                 newAccountPubkey: hashmapPubkey,
                 lamports,
