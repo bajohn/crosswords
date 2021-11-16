@@ -30,7 +30,6 @@ pub struct GreetingAccount {
     pub counter: u32,
 }
 
-
 entrypoint!(process_instruction);
 pub fn process_instruction(
     program_id: &Pubkey,
@@ -45,20 +44,35 @@ pub fn process_instruction(
     let accounts_iter = &mut accounts.iter();
     let account = next_account_info(accounts_iter)?;
 
+   
     let mut salt_acc = SaltStore::try_from_slice(&account.data.borrow_mut())?;
+    
     msg!("Stored data {}", salt_acc.saltstore);
     salt_acc.saltstore = String::from("tester");
     msg!("Modified data {}", salt_acc.saltstore);
-    let mut result = Vec::with_capacity(1000);
-    salt_acc.serialize(&mut result)?;
+    // let mut result = Vec::with_capacity(1000);
+    //let resp = salt_acc.serialize(&mut result);
+    // TODO next up - this appears to be breaking, better error here
+    // ->Program log: error! failed to write whole buffer
+    // How do we allocate the size for non-u32?
+    // Really, we want an array, how do we allocate?
+    // Remember to clear our the contract to rerun esp if changing the type of account
+    // owned by the contract
+    let resp = salt_acc.serialize(&mut &mut account.data.borrow_mut()[..]);
 
+    match resp {
+        Ok(_) => msg!("ok "),
+        Err(err) => {
+            msg!("error! {}", err);
+            panic!("Exiting! bad serialize");
+        }
+    }
 
     // Increment and store the number of times the account has been greeted
     // let mut greeting_account = GreetingAccount::try_from_slice(&account.data.borrow())?;
     // greeting_account.counter += 1;
     // greeting_account.serialize(&mut &mut account.data.borrow_mut()[..])?;
     // msg!("Greeted {} time(s)!", greeting_account.counter);
-
 
     // let contains_key = salt_hashmap.saltstore.contains_key(&String::from("acc_key"));
     // msg!("Contains key {}", contains_key);
