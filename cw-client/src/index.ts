@@ -11,6 +11,7 @@ import {
     Transaction,
     sendAndConfirmTransaction,
     TransferParams,
+    ParsedAccountData,
 } from '@solana/web3.js';
 import * as borsh from 'borsh';
 import * as crypto from 'crypto';
@@ -46,7 +47,10 @@ const main = async () => {
         dealerKeyPair,
         programKeypair.publicKey);
     await runContract(connection, programKeypair.publicKey, hashMapAccount, player1KeyPair);
+
+    await checkHashmapAccount(connection, hashMapAccount);
     console.log('Done');
+
     return 'done';
 
     const escrowAccount = await createAccountOwnedByProgram(
@@ -142,17 +146,16 @@ const createAccountOwnedByProgram = async (connection: Connection, payer: Keypai
 
 
 const createHashmapAccountOwnedByProgram = async (connection: Connection, payer: Keypair, programId: PublicKey) => {
-    const FIXED_ACC_SEED = 'hashmapseed';
+    const FIXED_ACC_SEED = 'ddbbbb';
     const hashmapPubkey = await PublicKey.createWithSeed(
         payer.publicKey,
         FIXED_ACC_SEED,
         programId,
     );
 
-    // Minimum size per Solana docs https://docs.solana.com/developing/programming-model/accounts
     const SALT_STORE_BYTES = borsh.serialize(
         SaltStoreSchema,
-        new SaltStore({ saltstore: [] }),
+        new SaltStore({ saltstore: ['abcd', 'abcd'] }),
     ).length;
 
     const escrowAccount = await connection.getAccountInfo(hashmapPubkey);
@@ -170,7 +173,7 @@ const createHashmapAccountOwnedByProgram = async (connection: Connection, payer:
                 seed: FIXED_ACC_SEED,
                 newAccountPubkey: hashmapPubkey,
                 lamports,
-                space: SALT_STORE_BYTES,
+                space: 1024,//SALT_STORE_BYTES,
                 programId,
             }),
         );
@@ -182,6 +185,40 @@ const createHashmapAccountOwnedByProgram = async (connection: Connection, payer:
     }
     return hashmapPubkey;
 }
+
+const checkProgramData = async (connection: Connection, key: PublicKey) => {
+    const resp = await connection.getParsedAccountInfo(key);
+    console.log('Check:')
+    console.log(resp);
+    const parsedData = resp.value.data as ParsedAccountData;
+    const programData = parsedData.parsed.info.programData as string;
+    console.log(programData);
+
+
+    var binary_string = Buffer.from(programData, 'base64');
+
+    const greeting = borsh.deserialize(
+        SaltStoreSchema,
+        SaltStore,
+        binary_string
+    );
+};
+
+const checkHashmapAccount = async (connection: Connection, key: PublicKey) => {
+    const resp = await connection.getParsedAccountInfo(key);
+    console.log('Check:')
+    console.log(resp);
+    const parsedData = resp.value.data as Buffer;
+    const slicedData = parsedData.subarray(0, 12);
+    console.log(parsedData);
+    console.log(slicedData);
+    const deserialized = borsh.deserialize(
+        SaltStoreSchema,
+        SaltStore,
+        slicedData
+    );
+    console.log(deserialized.saltstore);
+};
 
 
 
@@ -229,8 +266,8 @@ const PasswordSchema = new Map([
 // Schema for storing a hashmap of
 // accounts and salts
 class SaltStore {
-    saltstore: any[] = [];
-    constructor(fields: { saltstore: [] } | undefined = undefined) {
+    saltstore: string[] = [];
+    constructor(fields: { saltstore: string[] } | undefined = undefined) {
         if (fields) {
             this.saltstore = fields.saltstore;
         } else {
@@ -239,7 +276,9 @@ class SaltStore {
     }
 }
 const SaltStoreSchema = new Map([
-    [SaltStore, { kind: 'struct', fields: [['saltstore', 'array']] }],
+    [SaltStore, {
+        kind: 'struct', fields: [['saltstore', ['string']]],
+    }]
 ]);
 
 

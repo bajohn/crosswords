@@ -21,7 +21,7 @@ pub struct PasswordStore {
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct SaltStore {
-    pub saltstore: String,
+    pub saltstore: Vec<String>,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
@@ -43,13 +43,15 @@ pub fn process_instruction(
     // TODO: this should be hardcoded in-contract, not sent as an arg
     let accounts_iter = &mut accounts.iter();
     let account = next_account_info(accounts_iter)?;
+    account.key.log();
 
-   
-    let mut salt_acc = SaltStore::try_from_slice(&account.data.borrow_mut())?;
-    
-    msg!("Stored data {}", salt_acc.saltstore);
-    salt_acc.saltstore = String::from("tester");
-    msg!("Modified data {}", salt_acc.saltstore);
+    let salt_acc = SaltStore {
+        saltstore: Vec::from([String::from("abcd")]),
+    };
+    //let mut salt_acc = SaltStore::try_from_slice(&account.data.borrow())?;
+    // msg!("Stored data {}", salt_acc.saltstore);
+
+    salt_acc.serialize(&mut &mut account.data.borrow_mut()[..])?;
     // let mut result = Vec::with_capacity(1000);
     //let resp = salt_acc.serialize(&mut result);
     // TODO next up - this appears to be breaking, better error here
@@ -58,15 +60,14 @@ pub fn process_instruction(
     // Really, we want an array, how do we allocate?
     // Remember to clear our the contract to rerun esp if changing the type of account
     // owned by the contract
-    let resp = salt_acc.serialize(&mut &mut account.data.borrow_mut()[..]);
 
-    match resp {
-        Ok(_) => msg!("ok "),
-        Err(err) => {
-            msg!("error! {}", err);
-            panic!("Exiting! bad serialize");
-        }
-    }
+    //let mut result = Vec::with_capacity(1000);
+
+    //let resp = salt_acc.serialize(&mut &mut account.data.borrow_mut()[..]);
+    // salt_acc.serialize(&mut result);
+    // let mut salt_acc2 = SaltStore::try_from_slice(&result);
+    // let resp2 = salt_acc2.unwrap();
+    // msg!(&resp2.saltstore);
 
     // Increment and store the number of times the account has been greeted
     // let mut greeting_account = GreetingAccount::try_from_slice(&account.data.borrow())?;
