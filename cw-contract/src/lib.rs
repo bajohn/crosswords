@@ -46,9 +46,16 @@ pub fn process_instruction(
     account.key.log();
 
     let salt_acc = SaltStore {
-        saltstore: Vec::from([String::from("abcd"), String::from("defg"), String::from("hijklmnop")]),
+        saltstore: Vec::from([
+            String::from("abcd"),
+            String::from("defg"),
+            String::from("hijklmnop"),
+        ]),
     };
-    let mut salt_acc = SaltStore::try_from_slice(&account.data.borrow())?;
+    let idx = truncate_vec(&account.data.borrow());
+    msg!("Found goodies {}", idx);
+    let mut salt_acc = SaltStore::try_from_slice(&account.data.borrow()[0..idx])?;
+    //let mut salt_acc = SaltStore::try_from_slice(&account.data.borrow()[0..33])?;
     msg!("Stored data {}", salt_acc.saltstore[0]);
 
     //salt_acc.serialize(&mut &mut account.data.borrow_mut()[..])?;
@@ -91,19 +98,19 @@ pub fn process_instruction(
 }
 // NEXT UP - copy latest from rust sandbox repo, implement
 // chopper
-fn truncate_vec(vecIn: &Vec<u8>) -> Vec<u8> {
+fn truncate_vec(vecIn: &[u8]) -> usize {
     let mut i = vecIn.len();
     let mut truncIdx = 0;
-    let mut ret = Vec::with_capacity(i);
+    let mut ret: usize = 0;
     while i > 0 {
         i -= 1;
         match vecIn.get(i) {
             Some(num) => {
-                if *num == 0 {
-                    ret = vecIn[0..i].to_vec();
+                if !(*num == 0) {
+                    ret = i+1;
                     break;
                 }
-                println!("Found {}", num);
+                // msg!("Found {}", num);
             }
             None => println!("Not found!"),
         }
