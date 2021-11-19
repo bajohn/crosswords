@@ -46,40 +46,12 @@ pub fn process_instruction(
     account.key.log();
 
     let salt_acc = SaltStore {
-        saltstore: Vec::from([String::from("abcd")]),
+        saltstore: Vec::from([String::from("abcd"), String::from("defg"), String::from("hijklmnop")]),
     };
-    //let mut salt_acc = SaltStore::try_from_slice(&account.data.borrow())?;
-    // msg!("Stored data {}", salt_acc.saltstore);
+    let mut salt_acc = SaltStore::try_from_slice(&account.data.borrow())?;
+    msg!("Stored data {}", salt_acc.saltstore[0]);
 
-    salt_acc.serialize(&mut &mut account.data.borrow_mut()[..])?;
-    // let mut result = Vec::with_capacity(1000);
-    //let resp = salt_acc.serialize(&mut result);
-    // TODO next up - this appears to be breaking, better error here
-    // ->Program log: error! failed to write whole buffer
-    // How do we allocate the size for non-u32?
-    // Really, we want an array, how do we allocate?
-    // Remember to clear our the contract to rerun esp if changing the type of account
-    // owned by the contract
-
-    //let mut result = Vec::with_capacity(1000);
-
-    //let resp = salt_acc.serialize(&mut &mut account.data.borrow_mut()[..]);
-    // salt_acc.serialize(&mut result);
-    // let mut salt_acc2 = SaltStore::try_from_slice(&result);
-    // let resp2 = salt_acc2.unwrap();
-    // msg!(&resp2.saltstore);
-
-    // Increment and store the number of times the account has been greeted
-    // let mut greeting_account = GreetingAccount::try_from_slice(&account.data.borrow())?;
-    // greeting_account.counter += 1;
-    // greeting_account.serialize(&mut &mut account.data.borrow_mut()[..])?;
-    // msg!("Greeted {} time(s)!", greeting_account.counter);
-
-    // let contains_key = salt_hashmap.saltstore.contains_key(&String::from("acc_key"));
-    // msg!("Contains key {}", contains_key);
-    // salt_hashmap.saltstore.insert(String::from("acc_key"), String::from("salt"));
-    // let contains_key = salt_hashmap.saltstore.contains_key(&String::from("acc_key"));
-    // msg!("Contains key {}", contains_key);
+    //salt_acc.serialize(&mut &mut account.data.borrow_mut()[..])?;
 
     // As a test, based on a hash for "a password"
     msg!("Done");
@@ -116,6 +88,27 @@ pub fn process_instruction(
     // }
 
     Ok(())
+}
+// NEXT UP - copy latest from rust sandbox repo, implement
+// chopper
+fn truncate_vec(vecIn: &Vec<u8>) -> Vec<u8> {
+    let mut i = vecIn.len();
+    let mut truncIdx = 0;
+    let mut ret = Vec::with_capacity(i);
+    while i > 0 {
+        i -= 1;
+        match vecIn.get(i) {
+            Some(num) => {
+                if *num == 0 {
+                    ret = vecIn[0..i].to_vec();
+                    break;
+                }
+                println!("Found {}", num);
+            }
+            None => println!("Not found!"),
+        }
+    }
+    ret
 }
 
 // fn get_salt(len: u8) -> String {

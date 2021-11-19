@@ -204,18 +204,28 @@ const checkProgramData = async (connection: Connection, key: PublicKey) => {
     );
 };
 
+const truncateBuffer = (buf: Buffer) => {
+    for (let i = buf.length - 1; i >= 0; i--) {
+        if (buf[i] !== 0) {
+            console.log('buf length', i+1);
+            return buf.subarray(0, i+1);
+        }
+    }
+}
+
 const checkHashmapAccount = async (connection: Connection, key: PublicKey) => {
     const resp = await connection.getParsedAccountInfo(key);
     console.log('Check:')
     console.log(resp);
     const parsedData = resp.value.data as Buffer;
-    const slicedData = parsedData.subarray(0, 12);
+    const truncatedData = truncateBuffer(parsedData);
+
     console.log(parsedData);
-    console.log(slicedData);
+    console.log(truncatedData);
     const deserialized = borsh.deserialize(
         SaltStoreSchema,
         SaltStore,
-        slicedData
+        truncatedData
     );
     console.log(deserialized.saltstore);
 };
