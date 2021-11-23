@@ -42,9 +42,13 @@ pub fn process_instruction(
     // Get salt account info from instructions
     // TODO: this should be hardcoded in-contract, not sent as an arg
     let accounts_iter = &mut accounts.iter();
-    let account = next_account_info(accounts_iter)?;
-    account.key.log();
-
+    let sender_account = next_account_info(accounts_iter)?;
+    let salt_account = next_account_info(accounts_iter)?;
+    sender_account.key.log(); // Log sender acc
+    if(!sender_account.is_signer) {
+        panic!("Sender must be signer");
+    }
+    salt_account.key.log(); // Log salt account
     let salt_acc = SaltStore {
         saltstore: Vec::from([
             String::from("abcd"),
@@ -52,9 +56,9 @@ pub fn process_instruction(
             String::from("hijklmnop"),
         ]),
     };
-    let idx = truncate_vec(&account.data.borrow());
+    let idx = truncate_vec(&salt_account.data.borrow());
     msg!("Found goodies {}", idx);
-    let mut salt_acc = SaltStore::try_from_slice(&account.data.borrow()[0..idx])?;
+    let mut salt_acc = SaltStore::try_from_slice(&salt_account.data.borrow()[0..idx])?;
     //let mut salt_acc = SaltStore::try_from_slice(&account.data.borrow()[0..33])?;
     msg!("Stored data {}", salt_acc.saltstore[0]);
 
@@ -64,35 +68,6 @@ pub fn process_instruction(
     msg!("Done");
     sol_log_compute_units();
 
-    // let correct_hash = hex!("afd1368cbf1509870eecbbce3c3bc4614e5d10e9f03aa6590db688d4cffbe86b");
-
-    // let mut hasher = Sha256::new();
-    // let password_store = PasswordStore::try_from_slice(&instruction_data)?;
-
-    // // write input message
-    // hasher.update(password_store.password);
-    // // read hash digest and consume hasher
-    // let result = hasher.finalize();
-
-    // if result[..] == correct_hash {
-    //     msg!("Correct password! Paying reward");
-
-    //     const LAMPORTS_PER_SOL: u64 = 1_000_000_000;
-    //     let transfer_ammount = 2 * LAMPORTS_PER_SOL;
-    // let source_account = next_account_info(accounts_iter)?;
-    // let destination_account = next_account_info(accounts_iter)?;
-    // msg!("Account owner is {}", source_account.owner);
-
-    // if source_account.owner != program_id {
-    //     msg!("Escrow account does not have the correct program id");
-    //     return Err(ProgramError::IncorrectProgramId);
-    // }
-
-    // **source_account.try_borrow_mut_lamports()? -= transfer_ammount;
-    // **destination_account.try_borrow_mut_lamports()? += transfer_ammount;
-    // } else {
-    //     msg!("incorrect password! Exiting.");
-    // }
 
     Ok(())
 }

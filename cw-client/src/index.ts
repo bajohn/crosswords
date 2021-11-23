@@ -207,8 +207,8 @@ const checkProgramData = async (connection: Connection, key: PublicKey) => {
 const truncateBuffer = (buf: Buffer) => {
     for (let i = buf.length - 1; i >= 0; i--) {
         if (buf[i] !== 0) {
-            console.log('buf length', i+1);
-            return buf.subarray(0, i+1);
+            console.log('buf length', i + 1);
+            return buf.subarray(0, i + 1);
         }
     }
 }
@@ -317,7 +317,16 @@ const runContract = async (
 ) => {
     const instruction = new TransactionInstruction({
         keys: [
-            { pubkey: hashmapAccount, isSigner: false, isWritable: true },
+            {
+                pubkey: senderKeypair.publicKey,
+                isSigner: true,
+                isWritable: true
+            },
+            {
+                pubkey: hashmapAccount,
+                isSigner: false,
+                isWritable: true
+            },
         ],
         programId,
         data: Buffer.alloc(0),
