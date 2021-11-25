@@ -48,7 +48,8 @@ const main = async () => {
         programKeypair.publicKey);
     await runContract(connection, programKeypair.publicKey, hashMapAccount, player1KeyPair);
 
-    await checkHashmapAccount(connection, hashMapAccount);
+    await createSaltstoreTest();
+    //await checkHashmapAccount(connection, hashMapAccount);
     console.log('Done');
 
     return 'done';
@@ -276,41 +277,6 @@ const PasswordSchema = new Map([
 
 
 
-// const SaltStoreSchema = new Map([
-//     [SaltStore, {
-//         kind: 'struct', fields: [['saltstore', ['string']]],
-//     }]
-// ]);
-// TODO this doesn't quite work for de
-class SaltStore {
-    saltstore: SaltStruct[] = [];
-    constructor() {
-    }
-}
-
-class SaltStruct {
-    acc: PublicKey;
-    salt: string;
-    constructor() {
-
-    }
-}
-const SaltStoreSchema = new Map([
-    [SaltStore, {
-        kind: 'struct',
-        fields: [['saltstore', [
-            SaltStruct, {
-                kind: 'struct',
-                fields: [
-                    ['acc', 'string'],
-                    ['salt', 'string']
-                ]
-            }
-        ]
-        ]],
-    }]
-]);
-
 
 
 const getWalletKeyPair = async (userPath: string): Promise<Keypair> => {
@@ -358,6 +324,104 @@ const runContract = async (
     );
 };
 
+
+// This worked before 
+// class SaltStore {
+//     saltstore: string[] = [];
+//     constructor(fields: { saltstore: string[] } | undefined = undefined) {
+//         if (fields) {
+//             this.saltstore = fields.saltstore;
+//         } else {
+//             throw Error('')
+//         }
+//     }
+// }
+// const SaltStoreSchema = new Map([
+//     [SaltStore, {
+//         kind: 'struct', fields: [['saltstore', ['string']]],
+//     }]
+// ]);
+
+
+// TODO this doesn't quite work for deserializing 
+class SaltStore {
+    saltstore: SaltStruct[] = [];
+    constructor(fields: { saltstore: SaltStruct[] } | undefined = undefined) {
+        if (fields) {
+            this.saltstore = fields.saltstore;
+        } else {
+            throw Error('')
+        }
+    }
+}
+
+class SaltStruct {
+    acc: string;
+    salt: string;
+    constructor(fields: { acc: string, salt: string } | undefined = undefined) {
+        if (fields) {
+            this.acc = fields.acc;
+            this.salt = fields.acc;
+        } else {
+            throw Error('')
+        }
+    }
+}
+
+const SaltStructSchema = new Map([
+    [
+        SaltStruct, {
+            kind: 'struct',
+            fields: [
+                ['acc', 'string'],
+                ['salt', 'string']
+            ]
+        }
+    ]
+]);
+
+//Bad:
+// const SaltStoreSchema = new Map([
+//     [SaltStore, {
+//         kind: 'struct',
+//         fields: [['saltstore', [SaltStructSchema]
+//         ]],
+//     }]
+// ]);
+
+
+const SaltStoreSchema = new Map<any, any>([
+    [SaltStore, {
+        kind: 'struct',
+        fields: [['saltstore', [SaltStructSchema]
+        ]],
+    }],
+    [
+        SaltStruct, {
+            kind: 'struct',
+            fields: [
+                ['acc', 'string'],
+                ['salt', 'string']
+            ]
+        }
+    ]
+])
+
+
+
+
+const createSaltstoreTest = async () => {
+    //This works
+    borsh.serialize(SaltStoreSchema, new SaltStore({
+        saltstore: [new SaltStruct({
+            acc: 'hello',
+            salt: 'there'
+        })]
+    }));
+
+
+}
+
 const payFromEscrow = async (
     connection: Connection,
     programId: PublicKey,
@@ -386,27 +450,6 @@ const payFromEscrow = async (
         [receiverKeypair],
     );
 }
-
-
-
-// const reportGreetings = async (connection: Connection, greetedKey: PublicKey) => {
-//     const accountInfo = await connection.getAccountInfo(greetedKey);
-//     if (accountInfo === null) {
-//         throw 'Error: cannot find the greeted account';
-//     }
-//     const greeting = borsh.deserialize(
-//         GreetingSchema,
-//         GreetingAccount,
-//         accountInfo.data,
-//     );
-//     console.log(
-//         greetedKey.toBase58(),
-//         'has been greeted',
-//         greeting.counter,
-//         'time(s)',
-//     );
-// }
-
 
 main();
 
