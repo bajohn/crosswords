@@ -76,14 +76,12 @@ solana transfer Gh3EmjisqQZLEyW6fjW1VWg82b3jmomwqr2G7285m1US 1 --allow-unfunded-
         - Whoever sends the phrase first gets all the funds
     4. Two accounts w/ hash phrase
         - Same as (3), but hash the phrase sent, to obfuscate what phrase unlocks the funds
-    --> TODO WE ARE HERE!
-    PROBLEM - the instructions are stored on-chain. How can we obfuscate?
-    SOLUTION?? 
         - Store a random salt value for each player account in a hashmap account owned by the contract
             {account: salt}
         - When puzzle is ready, some external process populates another hashmap account with 
             {account: hash(hash(salt + puzzle solution))}
         - Players then send hash(salt + (puzzle solution)), and contract calculates  hash(hash(salt + puzzle solution)
+        - WE ARE HERE - Able to serialize a nested array via borsh in rust of a pubkey, and able to serialize a nested array of string in typescript. How can we store a string in rust of a pubkey, or a pubkey in ts? Shouldn't be hard, just need to store raw u8 as a key in both, OR choose pubkey or string for both
     5. n accounts with accounts tracking
         - Same as (4), but allow arbitrary number of accounts, and check the claimer is an original funder
         - Payout is based on length of account array
