@@ -153,10 +153,10 @@ const createHashmapAccountOwnedByProgram = async (connection: Connection, payer:
         programId,
     );
 
-    const SALT_STORE_BYTES = borsh.serialize(
-        SaltStoreSchema,
-        new SaltStore({ saltstore: ['abcd', 'abcd'] }),
-    ).length;
+    // const SALT_STORE_BYTES = borsh.serialize(
+    //     SaltStoreSchema,
+    //     new SaltStore({ saltstore: ['abcd', 'abcd'] }),
+    // ).length;
 
     const escrowAccount = await connection.getAccountInfo(hashmapPubkey);
     if (escrowAccount === null) {
@@ -164,7 +164,7 @@ const createHashmapAccountOwnedByProgram = async (connection: Connection, payer:
             'Creating account', hashmapPubkey.toBase58(),
         );
         const lamports = await connection.getMinimumBalanceForRentExemption(
-            SALT_STORE_BYTES,
+            1024,
         );
         const transaction = new Transaction().add(
             SystemProgram.createAccountWithSeed({
@@ -276,18 +276,25 @@ const PasswordSchema = new Map([
 // Schema for storing a hashmap of
 // accounts and salts
 class SaltStore {
-    saltstore: string[] = [];
-    constructor(fields: { saltstore: string[] } | undefined = undefined) {
-        if (fields) {
-            this.saltstore = fields.saltstore;
-        } else {
-            throw Error('')
-        }
+    saltstore: SaltStruct[] = [];
+    constructor() {
     }
 }
+
+class SaltStruct {
+    acc: PublicKey;
+    salt: string;
+    constructor() {
+
+    }
+}
+
+// const SaltStructSchema = new Map([
+
+// ]);
 const SaltStoreSchema = new Map([
     [SaltStore, {
-        kind: 'struct', fields: [['saltstore', ['string']]],
+        kind: 'struct', fields: [['saltstore', ['struct']]],
     }]
 ]);
 
