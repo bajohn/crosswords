@@ -48,7 +48,7 @@ const main = async () => {
         programKeypair.publicKey);
     await runContract(connection, programKeypair.publicKey, hashMapAccount, player1KeyPair);
 
-    // await checkHashmapAccount(connection, hashMapAccount);
+    await checkHashmapAccount(connection, hashMapAccount);
     console.log('Done');
 
     return 'done';
@@ -273,8 +273,15 @@ const PasswordSchema = new Map([
 ]);
 
 
-// Schema for storing a hashmap of
-// accounts and salts
+
+
+
+// const SaltStoreSchema = new Map([
+//     [SaltStore, {
+//         kind: 'struct', fields: [['saltstore', ['string']]],
+//     }]
+// ]);
+// TODO this doesn't quite work for de
 class SaltStore {
     saltstore: SaltStruct[] = [];
     constructor() {
@@ -288,13 +295,19 @@ class SaltStruct {
 
     }
 }
-
-// const SaltStructSchema = new Map([
-
-// ]);
 const SaltStoreSchema = new Map([
     [SaltStore, {
-        kind: 'struct', fields: [['saltstore', ['struct']]],
+        kind: 'struct',
+        fields: [['saltstore', [
+            SaltStruct, {
+                kind: 'struct',
+                fields: [
+                    ['acc', 'string'],
+                    ['salt', 'string']
+                ]
+            }
+        ]
+        ]],
     }]
 ]);
 
