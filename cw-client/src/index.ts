@@ -48,7 +48,7 @@ const main = async () => {
         programKeypair.publicKey);
     await runContract(connection, programKeypair.publicKey, hashMapAccount, player1KeyPair);
 
-    await checkHashmapAccount(connection, hashMapAccount);
+    // await checkHashmapAccount(connection, hashMapAccount);
     console.log('Done');
 
     return 'done';
@@ -146,7 +146,7 @@ const createAccountOwnedByProgram = async (connection: Connection, payer: Keypai
 
 
 const createHashmapAccountOwnedByProgram = async (connection: Connection, payer: Keypair, programId: PublicKey) => {
-    const FIXED_ACC_SEED = 'ddbbbb';
+    const FIXED_ACC_SEED = 'ccccves';
     const hashmapPubkey = await PublicKey.createWithSeed(
         payer.publicKey,
         FIXED_ACC_SEED,
