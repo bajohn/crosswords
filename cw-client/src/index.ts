@@ -46,7 +46,7 @@ const main = async () => {
         connection,
         dealerKeyPair,
         programKeypair.publicKey);
-    await runContract(connection, programKeypair.publicKey, hashMapAccount, player1KeyPair);
+    await runContract(connection, programKeypair.publicKey, hashMapAccount, player2KeyPair);
 
     // await createSaltstoreTest();
     await checkHashmapAccount(connection, hashMapAccount);
@@ -147,7 +147,7 @@ const createAccountOwnedByProgram = async (connection: Connection, payer: Keypai
 
 
 const createHashmapAccountOwnedByProgram = async (connection: Connection, payer: Keypair, programId: PublicKey) => {
-    const FIXED_ACC_SEED = 'cjjf';
+    const FIXED_ACC_SEED = 'fwpafjpa';
     const hashmapPubkey = await PublicKey.createWithSeed(
         payer.publicKey,
         FIXED_ACC_SEED,
@@ -216,7 +216,7 @@ const truncateBuffer = (buf: Buffer) => {
 
 const checkHashmapAccount = async (connection: Connection, key: PublicKey) => {
     const resp = await connection.getParsedAccountInfo(key);
-    console.log('Check:')
+    console.log('Check hashmap account', key.toBase58())
     console.log(resp);
     const parsedData = resp.value.data as Buffer;
     const truncatedData = truncateBuffer(parsedData);
@@ -361,7 +361,7 @@ class SaltStruct {
     constructor(fields: { acc: string, salt: string } | undefined = undefined) {
         if (fields) {
             this.acc = fields.acc;
-            this.salt = fields.acc;
+            this.salt = fields.salt;
         } else {
             throw Error('')
         }
