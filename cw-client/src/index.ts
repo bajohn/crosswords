@@ -48,8 +48,8 @@ const main = async () => {
         programKeypair.publicKey);
     await runContract(connection, programKeypair.publicKey, hashMapAccount, player1KeyPair);
 
-    await createSaltstoreTest();
-    //await checkHashmapAccount(connection, hashMapAccount);
+    // await createSaltstoreTest();
+    await checkHashmapAccount(connection, hashMapAccount);
     console.log('Done');
 
     return 'done';
@@ -147,7 +147,7 @@ const createAccountOwnedByProgram = async (connection: Connection, payer: Keypai
 
 
 const createHashmapAccountOwnedByProgram = async (connection: Connection, payer: Keypair, programId: PublicKey) => {
-    const FIXED_ACC_SEED = 'ccccves';
+    const FIXED_ACC_SEED = 'cjjf';
     const hashmapPubkey = await PublicKey.createWithSeed(
         payer.publicKey,
         FIXED_ACC_SEED,
@@ -391,11 +391,12 @@ const SaltStructSchema = new Map([
 
 
 const SaltStoreSchema = new Map<any, any>([
-    [SaltStore, {
-        kind: 'struct',
-        fields: [['saltstore', [SaltStructSchema]
-        ]],
-    }],
+    [
+        SaltStore, {
+            kind: 'struct',
+            fields: [['saltstore', [SaltStruct]
+            ]],
+        }],
     [
         SaltStruct, {
             kind: 'struct',

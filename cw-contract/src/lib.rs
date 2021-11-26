@@ -1,5 +1,6 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use hex_literal::hex;
+use bs58::{decode, encode};
+// use hex_literal::hex;
 // use sha2::{Digest, Sha256};
 // use std::collections::HashMap;
 // use rand::Rng;
@@ -26,7 +27,7 @@ pub struct SaltStore {
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct SaltStruct {
-    pub acc: Pubkey,
+    pub acc: String,
     pub salt: String,
 }
 
@@ -69,9 +70,10 @@ pub fn process_instruction(
     };
 
     let mut found = false;
+    let sender_acc_str = encode(*sender_account.key).into_string();
     for i in &salt_store.saltstore {
         let x = &i.acc;
-        if x == sender_account.key {
+        if x == &sender_acc_str {
             msg!("Match!");
             found = true;
         }
@@ -79,7 +81,7 @@ pub fn process_instruction(
     if !found {
         msg!("Not yet found, adding to store!");
         salt_store.saltstore.push(SaltStruct {
-            acc: *sender_account.key,
+            acc: sender_acc_str,
             salt: String::from("abc"),
         });
         salt_store.serialize(&mut &mut salt_account.data.borrow_mut()[..])?;
