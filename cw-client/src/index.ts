@@ -324,25 +324,6 @@ const runContract = async (
     );
 };
 
-
-// This worked before 
-// class SaltStore {
-//     saltstore: string[] = [];
-//     constructor(fields: { saltstore: string[] } | undefined = undefined) {
-//         if (fields) {
-//             this.saltstore = fields.saltstore;
-//         } else {
-//             throw Error('')
-//         }
-//     }
-// }
-// const SaltStoreSchema = new Map([
-//     [SaltStore, {
-//         kind: 'struct', fields: [['saltstore', ['string']]],
-//     }]
-// ]);
-
-
 // TODO this doesn't quite work for deserializing 
 class SaltStore {
     saltstore: SaltStruct[] = [];
@@ -368,28 +349,6 @@ class SaltStruct {
     }
 }
 
-const SaltStructSchema = new Map([
-    [
-        SaltStruct, {
-            kind: 'struct',
-            fields: [
-                ['acc', 'string'],
-                ['salt', 'string']
-            ]
-        }
-    ]
-]);
-
-//Bad:
-// const SaltStoreSchema = new Map([
-//     [SaltStore, {
-//         kind: 'struct',
-//         fields: [['saltstore', [SaltStructSchema]
-//         ]],
-//     }]
-// ]);
-
-
 const SaltStoreSchema = new Map<any, any>([
     [
         SaltStore, {
@@ -407,21 +366,6 @@ const SaltStoreSchema = new Map<any, any>([
         }
     ]
 ])
-
-
-
-
-const createSaltstoreTest = async () => {
-    //This works
-    borsh.serialize(SaltStoreSchema, new SaltStore({
-        saltstore: [new SaltStruct({
-            acc: 'hello',
-            salt: 'there'
-        })]
-    }));
-
-
-}
 
 const payFromEscrow = async (
     connection: Connection,
