@@ -1,5 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use bs58::{decode, encode};
+use bs58::encode;
 // use hex_literal::hex;
 // use sha2::{Digest, Sha256};
 // use std::collections::HashMap;
@@ -9,9 +9,8 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint,
     entrypoint::ProgramResult,
-    log::{sol_log, sol_log_compute_units},
+    log::sol_log_compute_units,
     msg,
-    program_error::ProgramError,
     pubkey::Pubkey,
 };
 
@@ -39,9 +38,9 @@ pub struct GreetingAccount {
 
 entrypoint!(process_instruction);
 pub fn process_instruction(
-    program_id: &Pubkey,
+    _program_id: &Pubkey,
     accounts: &[AccountInfo],
-    instruction_data: &[u8],
+    _instruction_data: &[u8],
 ) -> ProgramResult {
     sol_log_compute_units();
     msg!("Escrow program entry");
@@ -98,13 +97,12 @@ pub fn process_instruction(
 // vec that is non-zero.
 // Used to chop off tail of "00" bytes on buffers.
 // TODO There has to be a better way to do this...
-fn truncate_vec(vecIn: &[u8]) -> usize {
-    let mut i = vecIn.len();
-    let mut truncIdx = 0;
+fn truncate_vec(vec_in: &[u8]) -> usize {
+    let mut i = vec_in.len();
     let mut ret: usize = 0;
     while i > 0 {
         i -= 1;
-        match vecIn.get(i) {
+        match vec_in.get(i) {
             Some(num) => {
                 if !(*num == 0) {
                     ret = i + 1;
