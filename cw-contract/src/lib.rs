@@ -57,15 +57,17 @@ pub fn process_instruction(
     }
     msg!("Salt Account owned by program");
     salt_account.key.log();
-    let idx = truncate_vec(&salt_account.data.borrow());
-    msg!("Found goodies {}", idx);
 
-    let mut salt_store = match idx {
-        0 => {
-            // Empty store, initialize and store
+    let salt_store_res = SaltStore::try_from_slice(&salt_account.data.borrow());
+    let mut salt_store = match salt_store_res {
+        Ok(T) => {
+            msg!("Deserialized successfully");
+            T
+        }
+        Err(E) => {
+            msg!("Failed to deserialize, probably new address");
             SaltStore { saltstore: vec![] }
         }
-        _ => SaltStore::try_from_slice(&salt_account.data.borrow()[0..idx])?,
     };
 
     let mut found = false;
@@ -96,12 +98,15 @@ pub fn process_instruction(
 // Return last index of input
 // vec that is non-zero.
 // Used to chop off tail of "00" bytes on buffers.
-// TODO There has to be a better way to do this...
+// Sample usage:
+// let idx = truncate_vec(&salt_account.data.borrow());
+// msg!("Found goodies {}", idx);
 fn truncate_vec(vec_in: &[u8]) -> usize {
     let mut i = vec_in.len();
     let mut ret: usize = 0;
     while i > 0 {
         i -= 1;
+        // msg!("Iterate {}", i);
         match vec_in.get(i) {
             Some(num) => {
                 if !(*num == 0) {
@@ -115,6 +120,7 @@ fn truncate_vec(vec_in: &[u8]) -> usize {
     ret
 }
 
+// TODO - random salt here?
 // fn get_salt(len: u8) -> String {
 //     let mut rng = rand::thread_rng();
 //     let mut ret = String::from("");

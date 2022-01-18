@@ -72,22 +72,22 @@ const main = async () => {
     await payFromEscrow(connection, programKeypair.publicKey, escrowAccount, player2KeyPair, incorrectPassword);
     console.log('AFTER');
     await logAccsInfo(connection, allKeypairs)
-}
+};
 
 const logPasswordHash = (password: string) => {
     const hashed = crypto.createHash('sha256').update(password);
     console.log('TS HASH', hashed.digest('hex'));
     return password;
-}
+};
 
 const logAccsInfo = async (connection: Connection, keyPairs: Keypair[]) => {
     Promise.all(keyPairs.map(keypair => logAccInfo(connection, keypair)));
-}
+};
 
 const logAccInfo = async (connection: Connection, keyPair: Keypair) => {
     const info = await connection.getAccountInfo(keyPair.publicKey);
     console.log('Account:', keyPair.publicKey.toBase58(), info.lamports);
-}
+};
 
 const fundEscrowAccount = async (connection: Connection, payerKeypair: Keypair, receiverPubkey: PublicKey) => {
     const transferParams: TransferParams = {
@@ -100,13 +100,13 @@ const fundEscrowAccount = async (connection: Connection, payerKeypair: Keypair, 
     const transaction = new Transaction().add(transactionInstruction);
     await sendAndConfirmTransaction(connection, transaction, [payerKeypair]);
 
-}
+};
 
 
 
 
 const createAccountOwnedByProgram = async (connection: Connection, payer: Keypair, programId: PublicKey) => {
-    const FIXED_ACC_SEED = 'escrowseed';
+    const FIXED_ACC_SEED = 'aowijfaoiwjfoa';
     const escrowPubkey = await PublicKey.createWithSeed(
         payer.publicKey,
         FIXED_ACC_SEED,
@@ -142,22 +142,33 @@ const createAccountOwnedByProgram = async (connection: Connection, payer: Keypai
         );
     }
     return escrowPubkey;
-}
+};
 
 
 
 const createHashmapAccountOwnedByProgram = async (connection: Connection, payer: Keypair, programId: PublicKey) => {
-    const FIXED_ACC_SEED = 'fwpafjpa';
+    const FIXED_ACC_SEED = 'cvbqqqafd[[';
+    const ADDR_STR_LEN = 44; // Length of Solana address as a string.
+
+    const SALT_STORE_BYTES = borsh.serialize(
+        SaltStoreSchema,
+        new SaltStore({
+            saltstore: [
+                new SaltStruct({
+                    acc: 'a'.repeat(ADDR_STR_LEN),
+                    salt: 'aaa'
+                })
+            ]
+        })).length;
+
+    console.log('SALT_STORE_BYTES', SALT_STORE_BYTES);
     const hashmapPubkey = await PublicKey.createWithSeed(
         payer.publicKey,
         FIXED_ACC_SEED,
         programId,
     );
 
-    // const SALT_STORE_BYTES = borsh.serialize(
-    //     SaltStoreSchema,
-    //     new SaltStore({ saltstore: ['abcd', 'abcd'] }),
-    // ).length;
+
 
     const escrowAccount = await connection.getAccountInfo(hashmapPubkey);
     if (escrowAccount === null) {
@@ -165,7 +176,7 @@ const createHashmapAccountOwnedByProgram = async (connection: Connection, payer:
             'Creating account', hashmapPubkey.toBase58(),
         );
         const lamports = await connection.getMinimumBalanceForRentExemption(
-            1024,
+            SALT_STORE_BYTES,
         );
         const transaction = new Transaction().add(
             SystemProgram.createAccountWithSeed({
@@ -174,7 +185,7 @@ const createHashmapAccountOwnedByProgram = async (connection: Connection, payer:
                 seed: FIXED_ACC_SEED,
                 newAccountPubkey: hashmapPubkey,
                 lamports,
-                space: 1024,//SALT_STORE_BYTES,
+                space: SALT_STORE_BYTES,
                 programId,
             }),
         );
@@ -185,7 +196,7 @@ const createHashmapAccountOwnedByProgram = async (connection: Connection, payer:
         );
     }
     return hashmapPubkey;
-}
+};
 
 const checkProgramData = async (connection: Connection, key: PublicKey) => {
     const resp = await connection.getParsedAccountInfo(key);
@@ -212,21 +223,19 @@ const truncateBuffer = (buf: Buffer) => {
             return buf.subarray(0, i + 1);
         }
     }
-}
+};
 
 const checkHashmapAccount = async (connection: Connection, key: PublicKey) => {
     const resp = await connection.getParsedAccountInfo(key);
     console.log('Check hashmap account', key.toBase58())
     console.log(resp);
     const parsedData = resp.value.data as Buffer;
-    const truncatedData = truncateBuffer(parsedData);
 
     console.log(parsedData);
-    console.log(truncatedData);
     const deserialized = borsh.deserialize(
         SaltStoreSchema,
         SaltStore,
-        truncatedData
+        parsedData
     );
     console.log(deserialized.saltstore);
 };
@@ -235,19 +244,19 @@ const checkHashmapAccount = async (connection: Connection, key: PublicKey) => {
 
 const createUserKeys = async (paths: string[]) => {
     return await Promise.all(paths.map(path => createUserKey(path)));
-}
+};
 const createUserKey = async (filePath: string): Promise<string> => {
     const newPair = Keypair.generate();
     console.log(`New key stored at ${filePath}, public key ${newPair.publicKey}`);
     fs.writeFile(filePath, `[${newPair.secretKey.toString()}]`, { encoding: 'utf8' });
     return filePath;
-}
+};
 
 const getBalance = async (connection: Connection, keyPair: Keypair) => {
     const balance = await connection.getBalance(keyPair.publicKey);
     console.log(`Balance ${balance}`);
     return balance;
-}
+};
 
 const getProgramKeypair = async (connection: Connection, programPath: string) => {
     const secretKeyString = await fs.readFile(programPath, { encoding: 'utf8' });
@@ -255,7 +264,7 @@ const getProgramKeypair = async (connection: Connection, programPath: string) =>
     const programKeyPair = Keypair.fromSecretKey(secretKey)
     console.log(`Program ID ${programKeyPair.publicKey.toString()}`);
     return programKeyPair;
-}
+};
 
 // Schema for passing a password into
 // the contract as serialized instruction_data
@@ -285,7 +294,7 @@ const getWalletKeyPair = async (userPath: string): Promise<Keypair> => {
     const keyPair = Keypair.fromSecretKey(secretKey);
     console.log(`Wallet found at ${keyPair.publicKey.toString()}`)
     return keyPair;
-}
+};
 
 const establishConnection = async () => {
     const rpcUrl = 'http://127.0.0.1:8899';
@@ -293,7 +302,7 @@ const establishConnection = async () => {
     const version = await connection.getVersion();
     console.log('Connection to cluster established:', rpcUrl);
     return connection;
-}
+};
 
 const runContract = async (
     connection: Connection,
@@ -334,7 +343,7 @@ class SaltStore {
             throw Error('')
         }
     }
-}
+};
 
 class SaltStruct {
     acc: string;
@@ -347,7 +356,7 @@ class SaltStruct {
             throw Error('')
         }
     }
-}
+};
 
 const SaltStoreSchema = new Map<any, any>([
     [
@@ -365,7 +374,7 @@ const SaltStoreSchema = new Map<any, any>([
             ]
         }
     ]
-])
+]);
 
 const payFromEscrow = async (
     connection: Connection,
@@ -394,7 +403,7 @@ const payFromEscrow = async (
         new Transaction().add(instruction),
         [receiverKeypair],
     );
-}
+};
 
 main();
 
