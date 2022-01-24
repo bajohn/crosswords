@@ -1,0 +1,4 @@
+# Intro
+The Borsh (link to https://borsh.io/) library provides a standard to bijectively serialize and deserialize arbitrary data structures. There are a number of trivial examples available online demonstrating how to serialize flat data structures Borsh.  In scaling up a data structure, we can often use the principle of mathematical induction, whereby one only needs to prove a base case of (n=0) and an induction step (n+1) to scale from 0 to infinity. Most 
+
+The purpose of this article is to demonstrate the induction case for Borsh serialization schemata in Typescript and Rust, meaning the ability to nest data structures. This allows a developer to create schemata to ship arbitrarily complex data structures between the two languages. 
