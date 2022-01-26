@@ -10,7 +10,7 @@ Consider the JSON object
     "person_id": "usr-abc123"
     "first_name": "John",
     "last_name": "Doe",
-    "orders": [
+    "purchases": [
         {
             "id": "ord-zzz987",
             "name": "laptop",
